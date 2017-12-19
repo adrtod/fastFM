@@ -20,7 +20,7 @@ setup(
 
     package_data={'fastFM': ['fastFM/*.pxd']},
 
-    version='0.2.9',
+    version='0.2.11',
     url='http://ibayer.github.io/fastFM',
     author='Immanuel Bayer',
     author_email='immanuel.bayer@uni-konstanz.de',
@@ -54,11 +54,12 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy', 'scikit-learn', 'scipy']
+    install_requires=['numpy', 'scikit-learn', 'scipy', 'cython']
 )

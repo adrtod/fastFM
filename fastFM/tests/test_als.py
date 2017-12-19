@@ -95,7 +95,7 @@ def test_fm_classification():
 
 def test_als_warm_start():
     X, y, coef = make_user_item_regression(label_stdev=0)
-    from sklearn.cross_validation import train_test_split
+    from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.33, random_state=42)
     X_train = sp.csc_matrix(X_train)
@@ -125,7 +125,7 @@ def test_als_warm_start():
 def test_warm_start_path():
 
     X, y, coef = make_user_item_regression(label_stdev=.4)
-    from sklearn.cross_validation import train_test_split
+    from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.33, random_state=42)
     X_train = sp.csc_matrix(X_train)
@@ -167,6 +167,36 @@ def test_warm_start_path():
 
     assert_almost_equal(rmse_train, rmse_train_re)
     assert_almost_equal(rmse_test, rmse_test_re)
+
+
+def test_als_classification_warm_start():
+    w0, w, V, y, X = get_test_problem(task='classification')
+
+    # 10 iter
+    fm = als.FMClassification(n_iter=10,
+                              init_stdev=0.1, l2_reg_w=0, l2_reg_V=0, rank=2)
+    fm.fit(X, y)
+    y_pred = fm.predict(X)
+    score = metrics.accuracy_score(y, y_pred)
+
+    # 5 iter + 5 more iter
+    fm = als.FMClassification(n_iter=5,
+                              init_stdev=0.1, l2_reg_w=0, l2_reg_V=0, rank=2)
+    fm.fit(X, y)
+    fm.fit(X, y, n_more_iter=5)
+    y_pred = fm.predict(X)
+    score_warm_start = metrics.accuracy_score(y, y_pred)
+
+    # 0 iter + 10 more iter
+    fm = als.FMClassification(n_iter=0,
+                              init_stdev=0.1, l2_reg_w=0, l2_reg_V=0, rank=2)
+    fm.fit(X, y)
+    fm.fit(X, y, n_more_iter=10)
+    y_pred = fm.predict(X)
+    score_warm_start_2 = metrics.accuracy_score(y, y_pred)
+
+    assert_almost_equal(score, score_warm_start)
+    assert_almost_equal(score, score_warm_start_2)
 
 
 def test_clone():

@@ -27,6 +27,34 @@ def _check_warm_start(fm, X):
     if not fm.rank == 0:
         assert fm.V_.shape[1] == n_features
 
+def ffm_predict(w0, w, V, X_test):
+    """ Return predictions
+
+    Parameters
+    ----------
+    w0 : float
+        bias term
+
+    w : float | array, shape = (n_features)
+        Coefficients for linear combination.
+
+    V : float | array, shape = (rank, n_features)
+        Coefficients of second order factor matrix.
+    
+    X_test : scipy.sparse.csc_matrix, (n_samples, n_features)
+
+    Returns
+    ------
+
+    y_pred : array, shape (n_samples)
+    """
+    X_test = check_array(X_test, accept_sparse="csc", dtype=np.float64,
+                         order="F")
+    assert sp.isspmatrix_csc(X_test)
+    assert X_test.shape[1] == len(w)
+    y_pred = ffm.ffm_predict(w0, w, V, X_test)
+    return y_pred
+    
 
 class FactorizationMachine(BaseEstimator):
 

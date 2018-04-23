@@ -112,6 +112,35 @@ def ffm_als_fit(fm, X, double[:] y):
     cffm.ffm_als_fit(&w_0, <double *> w.data, <double *> V.data,
                      pt_X, &y[0], pt_param)
     return w_0, w, V
+  
+ 
+############  ffm_als_fit_weighted ####################################### DONE
+def ffm_als_fit_weighted(fm, X, double[:] y, double[:] C):
+    assert X.shape[0] == len(y) # test shapes
+    n_features = X.shape[1]
+    X_ = CsMatrix(X)
+    pt_X = <cffm.cs_di *> PyCapsule_GetPointer(X_, "CsMatrix")
+    param = FFMParam(fm)
+    pt_param = <cffm.ffm_param *> PyCapsule_GetPointer(param, "FFMParam")
+    cdef double w_0
+    cdef np.ndarray[np.float64_t, ndim=1, mode='c'] w
+    cdef np.ndarray[np.float64_t, ndim=2, mode='c'] V
+
+    if fm.warm_start:
+        w_0 = 0 if fm.ignore_w_0 else fm.w0_
+        w = np.zeros(n_features, dtype=np.float64) if fm.ignore_w else fm.w_
+        V = np.zeros((fm.rank, n_features), dtype=np.float64)\
+                if fm.rank == 0 else fm.V_
+    else:
+        w_0 = 0
+        w = np.zeros(n_features, dtype=np.float64)
+        V = np.zeros((fm.rank, n_features), dtype=np.float64)
+
+    cffm.ffm_als_fit_weighted(&w_0, <double *> w.data, <double *> V.data,
+                     pt_X, &y[0], pt_param, &C[0])
+    return w_0, w, V
+  
+  
 
 
 def ffm_sgd_fit(fm, X, double[:] y):

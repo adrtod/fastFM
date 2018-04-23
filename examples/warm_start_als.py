@@ -48,7 +48,7 @@ if __name__ == "__main__":
         rmse_train.append(np.sqrt(mean_squared_error(fm.predict(X_train), y_train)))
         rmse_test.append(np.sqrt(mean_squared_error(fm.predict(X_test), y_test)))
 
-    print '------- restart ----------'
+    print ('------- restart ----------')
     values = np.arange(1, n_iter)
     rmse_test_re = []
     rmse_train_re = []

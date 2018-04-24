@@ -132,3 +132,103 @@ class FMRegression_weighted(FactorizationMachine):
 
         return y_pred
 
+
+class FMClassification_weighted(FactorizationMachine):
+    """ Factorization Machine Classification with a MCMC solver.
+
+    Parameters
+    ----------
+    n_iter : int, optional
+        The number of samples for the MCMC sampler, number or iterations over
+        the training set for ALS and number of steps for SGD.
+
+    init_stdev: float, optional
+        Sets the stdev  for the initialization of the parameter
+
+    random_state: int, optional
+        The seed of the pseudo random number generator that
+        initializes the parameters and mcmc chain.
+
+    rank: int
+        The rank of the factorization used for the second order interactions.
+
+    Attributes
+    ----------
+    w0_ : float
+        bias term
+
+    w_ : float | array, shape = (n_features)
+        Coefficients for linear combination.
+
+    V_ : float | array, shape = (rank_pair, n_features)
+        Coefficients of second order factor matrix.
+    """
+
+    def fit_predict(self, X_train, y_train, X_test, C):
+        """Return average class probabilities of posterior estimates of the
+        test samples.
+        Use only with MCMC!
+
+        Parameters
+        ----------
+        X_train : scipy.sparse.csc_matrix, (n_samples, n_features)
+
+        y_train : array, shape (n_samples)
+                the targets have to be encodes as {-1, 1}.
+
+        X_test : scipy.sparse.csc_matrix, (n_test_samples, n_features)
+
+        Returns
+        -------
+        y_pred : array, shape (n_test_samples)
+                Returns predicted class labels.
+
+        """
+        y_proba = self.fit_predict_proba(X_train, y_train, X_test, C)
+        y_pred = np.zeros_like(y_proba, dtype=np.float64) + self.classes_[0]
+        y_pred[y_proba > .5] = self.classes_[1]
+        return y_pred
+
+    def fit_predict_proba(self, X_train, y_train, X_test, C):
+        """Return average class probabilities of posterior estimates of the
+        test samples.
+        Use only with MCMC!
+
+        Parameters
+        ----------
+        X_train : scipy.sparse.csc_matrix, (n_samples, n_features)
+
+        y_train : array, shape (n_samples)
+                the targets have to be encodes as {-1, 1}.
+
+        X_test : scipy.sparse.csc_matrix, (n_test_samples, n_features)
+
+        Returns
+        -------
+        y_pred : array, shape (n_test_samples)
+            Returns probability estimates for the class with lowest
+            classification label.
+
+        """
+        self.task = "classification"
+
+        self.classes_ = np.unique(y_train)
+        if len(self.classes_) != 2:
+            raise ValueError("This solver only supports binary classification"
+                             " but the data contains"
+                             " class: %r" % self.classes_)
+
+        # fastFM-core expects labels to be in {-1,1}
+        y_train = y_train.copy()
+        i_class1 = (y_train == self.classes_[0])
+        y_train[i_class1] = -1
+        y_train[~i_class1] = 1
+
+        X_train, y_train, X_test = _validate_mcmc_fit_input(X_train, y_train,
+                                                            X_test)
+        y_train = _validate_class_labels(y_train)
+
+        coef, y_pred = ffm.ffm_mcmc_fit_predict_weighted(self, X_train,
+                                                X_test, y_train, C)
+        self.w0_, self.w_, self.V_ = coef
+        return y_pred

@@ -61,7 +61,7 @@ if __name__ == "__main__":
         rmse_test.append(np.sqrt(mean_squared_error(y_pred, y_test)))
         hyper_param[nr, :] = fm.hyper_param_
 
-    print '------- restart ----------'
+    print ('------- restart ----------')
     values = np.arange(1, n_iter)
     rmse_test_re = []
     hyper_param_re = np.zeros((len(values), 3 + 2 * rank), dtype=np.float64)

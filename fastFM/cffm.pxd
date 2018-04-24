@@ -43,6 +43,11 @@ cdef extern from "../fastFM-core/include/ffm.h":
     void ffm_mcmc_fit_predict(double *w_0, double *w, double *V,
         cs_di *X_train, cs_di *X_test, double *y_train, double *y_pred,
         ffm_param *param)
+    
+    # ffm_mcmc_fit_predict_weighted ###########################################
+    void ffm_mcmc_fit_predict_weighted(double *w_0, double *w, double *V,
+        cs_di *X_train, cs_di *X_test, double *y_train, double *y_pred,
+        ffm_param *param, double *C)
 
     void ffm_sgd_fit(double *w_0, double *w, double *V,
         cs_di *X, double *y, ffm_param *param)

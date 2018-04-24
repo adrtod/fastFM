@@ -238,3 +238,72 @@ def ffm_mcmc_fit_predict(fm, X_train, X_test, double[:] y):
                               pt_param)
     fm.hyper_param_ = hyper_param
     return (w_0, w, V), y_pred
+  
+  
+############  ffm_mcmc_fit_predict_weighted ############################## DONE
+  
+def ffm_mcmc_fit_predict_weighted(fm, X_train, X_test, double[:] y, double [:] C):
+    assert X_train.shape[0] == len(y)
+    assert X_train.shape[1] == X_test.shape[1]
+    n_features = X_train.shape[1]
+    param = FFMParam(fm)
+    pt_param = <cffm.ffm_param *> PyCapsule_GetPointer(param, "FFMParam")
+    X_train_ = CsMatrix(X_train)
+    pt_X_train = <cffm.cs_di *> PyCapsule_GetPointer(X_train_, "CsMatrix")
+    X_test_ = CsMatrix(X_test)
+    pt_X_test = <cffm.cs_di *> PyCapsule_GetPointer(X_test_, "CsMatrix")
+
+    cdef double w_0
+    cdef np.ndarray[np.float64_t, ndim=1, mode='c'] w
+    cdef np.ndarray[np.float64_t, ndim=2, mode='c'] V
+    # allocate the results vector
+    cdef np.ndarray[np.float64_t, ndim=1, mode='c'] y_pred =\
+         np.zeros(X_test.shape[0], dtype=np.float64)
+
+    if fm.warm_start:
+        w_0 = 0 if fm.ignore_w_0 else fm.w0_
+        w = np.zeros(n_features, dtype=np.float64) if fm.ignore_w else fm.w_
+        V = np.zeros((fm.rank, n_features), dtype=np.float64)\
+                if fm.rank == 0 else fm.V_
+    else:
+        w_0 = 0
+        w = np.zeros(n_features, dtype=np.float64)
+        V = np.zeros((fm.rank, n_features), dtype=np.float64)
+
+    if fm.warm_start:
+        y_pred = fm.prediction_
+    else:
+        y_pred = np.zeros(X_test.shape[0], dtype=np.float64)
+
+    # allocate vector for hyperparameter
+    w_groups = 1
+    n_hyper_param = 1 + 2 * w_groups + 2 * fm.rank
+    cdef np.ndarray[np.float64_t, ndim=1, mode='c'] hyper_param
+
+    if fm.warm_start:
+        hyper_param = fm.hyper_param_
+    else:
+        hyper_param = np.zeros(n_hyper_param, dtype=np.float64)
+    pt_param.n_hyper_param = n_hyper_param
+    pt_param.hyper_param = <double *> hyper_param.data
+
+    cffm.ffm_mcmc_fit_predict_weighted(&w_0, <double *> w.data, <double *> V.data,
+                              pt_X_train, pt_X_test,
+                              &y[0], <double *> y_pred.data,
+                              pt_param, &C[0])
+    fm.hyper_param_ = hyper_param
+    return (w_0, w, V), y_pred
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
